@@ -1,0 +1,24 @@
+<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+<script>
+/* global nn */
+  const filename = 'electric-piano-chords.mp3'
+  let music
+  
+  function remix () {
+    music.currentTime = nn.random(0, music.duration)
+  }
+  
+  function setup () {
+    music = nn.create('audio')
+    .set({
+      src: filename,
+      controls: true,
+      loop: true
+    })
+    .addTo('body')
+    .on('loadeddata', remix)
+  }
+  
+  nn.on('load', setup)
+  
+</script>
