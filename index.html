@@ -1,44 +1,127 @@
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Coral+Pixels&display=swap" rel="stylesheet">
+
+
 <script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
 <script>
 /* global nn */
-  const filename = 'amen-break.mp3'
-  let music
+  let currentShape = null
+  
+  let partyMusic, pianoTrack, stopTimer, currentFloat
+  
   const samples = {
-    q: {offset: 1.7980494844900194, duration: 0.20803878332942372, color: 'red'},
-    w: {offset: 2.2364169207913047, duration: 0.22289869642438287, color: 'green'},
-    e: {offset: 3.5440892731476827, duration: 0.6464062196307099, color: 'pink'},
-    r: {offset: 4.190495492778393, duration: 0.4235075232063261, color: 'magenta'}
+    'q': { offset: 1.50, duration: 3.26 },
+    'w': { offset: 4.29, duration: 3.42 },
+    'e': { offset: 8.27, duration: 3.48 },
+    'r': { offset: 12.25, duration: 3.53 },
+    't': { offset: 16.26, duration: 3.48 },
+    'y': { offset: 24.24, duration: 3.50 }
+  };
+  
+  const gradients = {
+    'q': 'radial-gradient(circle,rgba(63, 251, 195, 1) 0%, rgba(252, 70, 107, 1) 100%)',
+    'w': 'radial-gradient(circle,rgba(226, 251, 63, 1) 0%, rgba(252, 70, 173, 1) 100%)',
+    'e': 'radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%)',
+    'r': 'radial-gradient(circle,rgba(190, 238, 174, 1) 0%, rgba(148, 152, 233, 1) 100%)',
+    't': 'radial-gradient(circle,rgba(195, 63, 251, 1) 0%, rgba(209, 174, 0, 1) 100%)',
+    'y': 'radial-gradient(circle,rgba(120, 170, 240, 1) 0%, rgba(249, 255, 140, 1) 100%)'
   }
   
+  const shapes = {
+    'q': 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+    'w': 'frame(0% 0%, 0% 100%, 25% 100%, 25% 25%, 75% 25%, 75% 75%, 25% 75%, 25% 100%, 100% 100%, 100% 0%)',
+    'e': 'ellipse(25% 40% at 50% 50%)',
+    'r': 'polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%), polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)',
+    't': 'circle(50% at 50% 50%)',
+    'y': 'polygon(50% 0%, 0% 100%, 100% 100%)'
+ }
+  
+   function playSample (e) {
+    const key = e.key
+    
+    if (key === 's') {
+      partyMusic.loop = true
+      partyMusic.currentTime = 0
+      partyMusic.play()
+      return;
+    }
+     
+     const sample = samples[key] 
+     if (sample) {
+       pianoTrack.currentTime = sample.offset
+       pianoTrack.play()
+     
+     
+     if (stopTimer) clearTimeout(stopTimer)
+     stopTimer = setTimeout(() => pianoTrack.pause(), sample.duration * 1000); 
+     
+     const bg = gradients[e.key]
+     nn.get('body').css('background', bg)
+     }  
+     
+     if (currentShape) currentShape.remove()
+     if (currentFloat)  clearInterval(currentFloat)
+     
+     
+  
+    currentShape = nn.create('div')
+     .css({
+       background: 'blue',
+       position: 'absolute',
+       top: '50%',
+       left: '50%',
+       width: '200px',
+       height: '200px',
+       transform: 'translate(-50%, -50%)',
+       clipPath: shapes[key],
+       transition: 'top 0.5s, left 0.5s',
+       zIndex: 10 
+     })
+
+     .css('clip-path', shapes[key])
+     .addTo('body')
+     
+   currentFloat = setInterval(() => {
+     const x = Math.random() * window.innerWidth
+     const y = Math.random() * window.innerHeight
+     currentShape.css({
+       left: `${x}px`,
+       top: `${y}px`
+     })
+   })
+ } 
 
   
-  async function play (e) {
-    const s = samples[e.key]
-    nn.get('body').css('background', s.color)
-    music.currentTime = s.offset
-    music.play()
-    await nn.sleep(s.duration * 1000)
-    music.pause()
-  }
-  
-  // OR to mess with the music pitch
-  
-  async function play () {
-    music.preservesPitch = false
-    music.playbackRate = 2
-    music.play()
-  }
-  
-  function setup () {
-    music = nn.create('audio')
-    .set({
-      src: filename,
-      loop: true
-    })
+  function fileLoaded() {
+    nn.create('span')
+    .css('font-family', '"Coral Pixels", serifsq')
+    .content('press the keys: q, w, e, r, t, y -press s to start the party')
     .addTo('body')
   }
   
+  function setup () {
+    nn.get('body').css({
+      userSelect: 'none',
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    })
+    
+    partyMusic = nn.create('audio')
+     .set('src', 'SpotiMate.io - party 4 u - Charli xcx.mp3')
+     .addTo('body')
+
+  
+  pianoTrack = nn.create('audio')
+     .set('src', 'electric-piano-chords.mp3')
+     .addTo('body')
+     .on('loadeddata', fileLoaded)
+  }
+  
   nn.on('load', setup)
-  nn.on('keydown', play)
+  nn.on('keypress', playSample)
   
 </script>
